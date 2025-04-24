@@ -1,15 +1,16 @@
 import express from "express";
-import dotenv from "dotenv"
-import cors from "cors"
-import db from "./utils/db.js"
+import dotenv from "dotenv";
+import cors from "cors";
+import db from "./utils/db.js";
 
+//import all routes
+import userRoutes from "./routes/user.route.js"
 
-dotenv.config()
+dotenv.config();
 
-const app = express()
-const port = process.env.PORT || 3000
- 
- 
+const app = express();
+const port = process.env.PORT || 3000;
+
 app.use(
   cors({
     origin: process.env.BASE_URL,
@@ -24,19 +25,24 @@ app.use(express.urlencoded({ extended: true }));
 
 
 app.get("/", (req, res) => {
-    res.send("Hi , This is Home Page")
-})
+  res.send("Hi , This is Home Page");
+});
 app.get("/abhijit", (req, res) => {
-    res.send("Hi , This is Abhijit")
-})
+  res.send("Hi , This is Abhijit");
+});
 
 
-// console.log(process.env.PORT);
+app.post("/test", (req, res) => {
+  console.log("Test body:", req.body);
+  res.json({ received: req.body });
+});
+
 
 //connect to db
 db();
 
-app.listen(port, ()=>{
-    console.log(`✔️  Server is running on port :${port}`);
-    
-})
+app.use("/api/v1/users", userRoutes)
+
+app.listen(port, () => {
+  console.log(`✔️  Server is running on port: ${port}`);
+});
