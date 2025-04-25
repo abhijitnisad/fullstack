@@ -3,6 +3,7 @@ import nodemailer from "nodemailer";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { log } from "console";
 
 const registerUser = async (req, res) => {
   // console.log("BODY:", req);
@@ -174,7 +175,7 @@ const login = async (req, res) => {
       secure: true,
       maxAge: 24 * 60 * 60 * 1000,
     };
-    res.cookie("test", token, cookieOptions);
+    res.cookie("token", token, cookieOptions);
     res.status(200).json({
       success: true,
       message: "Login successful",
@@ -195,6 +196,19 @@ const login = async (req, res) => {
 
 const getMe = async (req, res) => {
   try {
+   const user = await User.findOne(req.user.id).select('-password')
+
+   if (!user) {
+    return res.status(400).json({
+      success:false,
+      message:"User not found",
+    })
+   }
+
+   res.status(200).json({
+    success:true,
+    user
+   })
     
   } catch (error) {
     
@@ -202,11 +216,9 @@ const getMe = async (req, res) => {
 };
 
 
-
-
 const logoutUser = async (req, res) => {
   try {
-    
+    res.cookie('token', '', {})
   } catch (error) {
     
   }

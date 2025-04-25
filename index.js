@@ -23,7 +23,7 @@ app.use(
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// for acccessing the users cookie
+// for accessing the users cookie
 app.use(cookieParser())
 
 
