@@ -3,7 +3,6 @@ import nodemailer from "nodemailer";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { log } from "console";
 
 const registerUser = async (req, res) => {
   // console.log("BODY:", req);
@@ -196,45 +195,52 @@ const login = async (req, res) => {
 
 const getMe = async (req, res) => {
   try {
-   const user = await User.findOne(req.user.id).select('-password')
+    const user = await User.findById(req.user.id).select("-password")
+    console.log("user3:",user);
 
-   if (!user) {
-    return res.status(400).json({
-      success:false,
-      message:"User not found",
-    })
-   }
 
-   res.status(200).json({
-    success:true,
-    user
-   })
-    
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      user,
+    });
   } catch (error) {
-    
+     console.log("Error in getMe:", error.message);
+     res.status(500).json({ success: false,
+       message: "Server Error",
+      error:error.message });
   }
 };
-
 
 const logoutUser = async (req, res) => {
   try {
-    res.cookie('token', '', {})
-  } catch (error) {
-    
-  }
+    res.cookie("token", "", {});
+    res.status(200).json({
+      success: true,
+      message: "Logged Out successfully ",
+    });
+  } catch (error) {}
 };
 const forgetPassword = async (req, res) => {
   try {
-    
-  } catch (error) {
-    
-  }
+  } catch (error) {}
 };
 const resetPassword = async (req, res) => {
   try {
-    
-  } catch (error) {
-    
-  }
+  } catch (error) {}
 };
-export { registerUser, verifyUser, login,getMe, logoutUser,resetPassword,forgetPassword };
+export {
+  registerUser,
+  verifyUser,
+  login,
+  getMe,
+  logoutUser,
+  resetPassword,
+  forgetPassword,
+};
