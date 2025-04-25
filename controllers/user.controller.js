@@ -1,6 +1,8 @@
 import User from "../model/User.model.js";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 const registerUser = async (req, res) => {
   // console.log("BODY:", req);
@@ -25,7 +27,7 @@ const registerUser = async (req, res) => {
 
   try {
     const existingUser = await User.findOne({ email });
-    console.log("existingUser:", existingUser);
+    // console.log("existingUser:", existingUser);
     if (existingUser) {
       return res.status(400).json({ message: "User already exist" });
     }
@@ -35,21 +37,25 @@ const registerUser = async (req, res) => {
       email,
       password,
     });
-    console.log("user:", user);
+    // console.log("user:", user);
 
     if (!user) {
       return res.status(400).json({ message: "User not registered" });
     }
 
     const token = crypto.randomBytes(32).toString("hex");
-    console.log("Token:", token);
 
     user.verificationToken = token;
+    console.log("Generated verification token:", token);
+    console.log(
+      "Verification URL:",
+      `${process.env.BASE_URL}/api/v1/users/verify/${token}`
+    );
 
     await user.save();
 
-    console.log("user:", user);
-    console.log("user JSON:", user.toJSON());
+    console.log("user1:", user);
+    // console.log("user JSON:", user.toJSON());
 
     //send email
 
@@ -63,12 +69,14 @@ const registerUser = async (req, res) => {
       },
     });
 
+    // console.log("Transporter:", transporter);
+
     const mailOption = {
-      from: process.env.MAILTRAP_SENDEREMAIL, // sender address
+      from: process.env.MAILTRAP_SENDEREMAIL,
       to: user.email, // list of receivers
       subject: "Verify your email ✔", // Subject line
-      text: `Plaease Click on Following link: ${process.env.BASE_URL}/api/v1/users/verify/${token}`, // plain text body
-      html: "<b>Hello world?</b>", // html body
+      text: `Plaease Click on Following link:${process.env.BASE_URL}/api/v1/users/verify/${token}`, // plain text body
+      html: "<b>User verification</b>", // html body
     };
 
     await transporter.sendMail(mailOption);
@@ -105,6 +113,7 @@ const verifyUser = async (req, res) => {
   }
 
   const user = await User.findOne({ verificationToken: token });
+  console.log("userToken:", user);
 
   if (!user) {
     return res.status(400).json({
@@ -113,10 +122,107 @@ const verifyUser = async (req, res) => {
   }
 
   user.isVerified = true;
-
   user.verificationToken = undefined;
-
   await user.save();
+
+  res.status(200).json({
+    message: "user verified successfully",
+  });
 };
 
-export { registerUser, verifyUser };
+const login = async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({
+      message: "All field are required",
+    });
+  }
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({
+        message: "Invalid email or password",
+      });
+    }
+    console.log("user:", user);
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    console.log("passwordMatch:", isMatch);
+
+    if (!isMatch) {
+      return res.status(400).json({
+        message: "Incorrect Password",
+      });
+    }
+    //user verify(isVerified)
+
+    //  if (!user.isVerified) {
+    //    return res.status(400).json({ message: "User is not verified" });
+    //  }
+
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "24h",
+      }
+    );
+    const cookieOptions = {
+      httpOnly: true,
+      secure: true,
+      maxAge: 24 * 60 * 60 * 1000,
+    };
+    res.cookie("test", token, cookieOptions);
+    res.status(200).json({
+      success: true,
+      message: "Login successful",
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    res.status(400).json({
+      message: "Something went wrong at login",
+      error: error.message,
+    });
+  }
+};
+
+const getMe = async (req, res) => {
+  try {
+    
+  } catch (error) {
+    
+  }
+};
+
+
+
+
+const logoutUser = async (req, res) => {
+  try {
+    
+  } catch (error) {
+    
+  }
+};
+const forgetPassword = async (req, res) => {
+  try {
+    
+  } catch (error) {
+    
+  }
+};
+const resetPassword = async (req, res) => {
+  try {
+    
+  } catch (error) {
+    
+  }
+};
+export { registerUser, verifyUser, login,getMe, logoutUser,resetPassword,forgetPassword };

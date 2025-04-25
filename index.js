@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import db from "./utils/db.js";
+import cookieParser from "cookie-parser";
 
 //import all routes
 import userRoutes from "./routes/user.route.js"
@@ -22,6 +23,8 @@ app.use(
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+// for acccessing the users cookie
+app.use(cookieParser())
 
 
 app.get("/", (req, res) => {
